@@ -1,22 +1,53 @@
+import { useState, useEffect } from 'react';
+import { Outlet, Route, Routes } from 'react-router-dom';
 import './App.css';
-import { Route, Routes } from 'react-router-dom';
-import Navbar from './components/Navbar';
-// import CountryDetails from './components/CountriesList';
-import CountriesList from './components/CountriesList';
-import Home from './components/Home';
-// import allCountries from './countries.json';
+import { CountriesList } from './components/CountriesList';
+import { CountryDetails } from './components/CountryDetails';
+import { Navbar } from './components/Navbar';
 
-function App() {
+function LayoutComponent({ countryData }) {
   return (
-    <div className="App">
+    <div>
       <Navbar />
-      {/* <CountriesList allCountries={allCountries} /> */}
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/CountriesList" element={<CountriesList />} />
-        {/* <Route path="/:alpha" element={<CountryDetails />}></Route> */}
-      </Routes>
+      <div className="flex">
+        <CountriesList countryData={countryData} />
+        <Outlet /> {/* {{{body}}} from hbs / express */}
+      </div>
     </div>
   );
 }
+
+function App() {
+  const [countryData, setCountryData] = useState([]);
+
+  useEffect(() => {
+    async function fetchCountryData() {
+      const response = await fetch(
+        'https://ih-countries-api.herokuapp.com/countries'
+      );
+      const data = await response.json();
+      console.log(data);
+      setCountryData(data);
+    }
+
+    fetchCountryData();
+  }, []);
+
+  useEffect(() => {
+    console.log('this is now the countryData state:', countryData);
+  }, [countryData]);
+
+  return (
+    <Routes>
+      <Route element={<LayoutComponent countryData={countryData} />}>
+        <Route path="/" element={null} />
+        <Route
+          path="/:alpha3Code"
+          element={<CountryDetails countryData={countryData} />}
+        />
+      </Route>
+    </Routes>
+  );
+}
+
 export default App;
